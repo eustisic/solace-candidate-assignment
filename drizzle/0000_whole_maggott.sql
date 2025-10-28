@@ -9,3 +9,8 @@ CREATE TABLE IF NOT EXISTS "advocates" (
 	"phone_number" bigint NOT NULL,
 	"created_at" timestamp DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX IF NOT EXISTS "idx_advocates_first_name" ON "advocates" ("first_name");
+CREATE INDEX IF NOT EXISTS "idx_advocates_last_name" ON "advocates" ("last_name");
+CREATE INDEX IF NOT EXISTS "idx_advocates_city" ON "advocates" ("city");
+CREATE INDEX IF NOT EXISTS "idx_advocates_years_of_experience" ON "advocates" ("years_of_experience");
