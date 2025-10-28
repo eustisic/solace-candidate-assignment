@@ -20,6 +20,26 @@ export default function Home() {
     });
   };
 
+  const formatPhoneNumber = (phone: string) => {
+    const cleaned = phone.toString().replace(/\D/g, "");
+    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+    if (match) {
+      return `(${match[1]}) ${match[2]}-${match[3]}`;
+    }
+    return phone;
+  };
+
+  const getDisplayText = (specialties: string[], index: number) => {
+    const specialtiesText = specialties.join(", ");
+    const isExpanded = expandedRows.has(index);
+    const shouldTruncate = specialtiesText.length > 50;
+    const displayText = shouldTruncate && !isExpanded
+      ? specialtiesText.slice(0, 50) + "..."
+      : specialtiesText;
+
+    return { displayText, shouldTruncate, isExpanded };
+  };
+
   useEffect(() => {
     console.log("fetching advocates...");
     const fetchAdvocates = async () => {
@@ -48,7 +68,7 @@ export default function Home() {
         advocate.city.includes(searchValue) ||
         advocate.degree.includes(searchValue) ||
         advocate.specialties.includes(searchValue) ||
-        advocate.yearsOfExperience.includes(searchValue)
+        advocate.yearsOfExperience.toString().includes(searchValue)
       );
     });
 
@@ -107,12 +127,7 @@ export default function Home() {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {filteredAdvocates.map((advocate, index) => {
-              const specialtiesText = advocate.specialties.join(", ");
-              const isExpanded = expandedRows.has(index);
-              const shouldTruncate = specialtiesText.length > 50;
-              const displayText = shouldTruncate && !isExpanded
-                ? specialtiesText.slice(0, 50) + "..."
-                : specialtiesText;
+              const { displayText, shouldTruncate, isExpanded } = getDisplayText(advocate.specialties, index);
 
               return (
                 <tr key={index} className="hover:bg-gray-50 transition-colors">
@@ -134,7 +149,7 @@ export default function Home() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{advocate.yearsOfExperience}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{advocate.phoneNumber}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{formatPhoneNumber(advocate.phoneNumber)}</td>
                 </tr>
               );
             })}
