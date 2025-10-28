@@ -14,4 +14,7 @@ Renamed filtered result to avoid shadowing the filteredAdvocates state variable.
 7. Add collapsible rows
 
 ### be-edits
-1. Added indexes on commonly searched/filtered columns. Indexes will improve query performance for searching and filtering advocates by these fields.
+1. Added indexes on commonly searched/filtered columns. Indexes will improve query performance for searching and filtering advocates by these fields. Added GIN index on JSONB payload column for efficient array searching
+2. Added search functionality across all fields and added pagination
+3. Removed client-side filtering to use API search
+4. Added pagination views 
