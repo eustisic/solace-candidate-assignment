@@ -4,11 +4,9 @@ import postgres from "postgres";
 const setup = () => {
   if (!process.env.DATABASE_URL) {
     console.error("DATABASE_URL is not set");
-    return {
-      select: () => ({
-        from: () => [],
-      }),
-    };
+    // Return a properly typed drizzle instance with a mock connection
+    const mockClient = postgres("postgres://mock");
+    return drizzle(mockClient);
   }
 
   // for query purposes

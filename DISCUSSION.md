@@ -1,6 +1,6 @@
 # Changes Made
 
-Branch fe-edits
+### fe-edits
 1. Removed document.getElementById
 Added searchTerm state and used it to display the search value.
 2. Made input controlled Added value={searchTerm} to the input to make it a controlled component and reset properly.
@@ -12,3 +12,6 @@ Added key props to mapped elements to avoid React warnings.
 Renamed filtered result to avoid shadowing the filteredAdvocates state variable.
 6. Add styling
 7. Add collapsible rows
+
+### be-edits
+1. Added indexes on commonly searched/filtered columns. Indexes will improve query performance for searching and filtering advocates by these fields.

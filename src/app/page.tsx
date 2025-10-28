@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  const [advocates, setAdvocates] = useState([]);
-  const [filteredAdvocates, setFilteredAdvocates] = useState([] as any[]);
+  const [advocates, setAdvocates] = useState([] as any[]);
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [isLoading, setIsLoading] = useState(false);
 
   const toggleRow = (index: number) => {
     setExpandedRows((prev) => {
@@ -40,45 +40,36 @@ export default function Home() {
     return { displayText, shouldTruncate, isExpanded };
   };
 
-  useEffect(() => {
-    console.log("fetching advocates...");
-    const fetchAdvocates = async () => {
-      try {
-        const response = await fetch("/api/advocates");
-        const jsonResponse = await response.json();
-        setAdvocates(jsonResponse.data);
-        setFilteredAdvocates(jsonResponse.data);
-      } catch (error) {
-        console.error("Error fetching advocates:", error);
-      }
-    };
+  const fetchAdvocates = async (search: string = "") => {
+    setIsLoading(true);
+    try {
+      const url = search
+        ? `/api/advocates?search=${encodeURIComponent(search)}`
+        : "/api/advocates";
+      const response = await fetch(url);
+      const jsonResponse = await response.json();
+      setAdvocates(jsonResponse.data);
+    } catch (error) {
+      console.error("Error fetching advocates:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    fetchAdvocates();
-  }, []);
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      fetchAdvocates(searchTerm);
+    }, 300);
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchTerm]);
 
   const onChange = (event: any) => {
-    const searchValue = event.target.value;
-    setSearchTerm(searchValue);
-
-    console.log("filtering advocates...");
-    const filtered = advocates.filter((advocate: any) => {
-      return (
-        advocate.firstName.includes(searchValue) ||
-        advocate.lastName.includes(searchValue) ||
-        advocate.city.includes(searchValue) ||
-        advocate.degree.includes(searchValue) ||
-        advocate.specialties.includes(searchValue) ||
-        advocate.yearsOfExperience.toString().includes(searchValue)
-      );
-    });
-
-    setFilteredAdvocates(filtered);
+    setSearchTerm(event.target.value);
   };
 
   const onClick = () => {
-    console.log(advocates);
     setSearchTerm("");
-    setFilteredAdvocates(advocates);
   };
 
   return (
@@ -126,7 +117,7 @@ export default function Home() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {filteredAdvocates.map((advocate, index) => {
+            {advocates.map((advocate, index) => {
               const { displayText, shouldTruncate, isExpanded } = getDisplayText(advocate.specialties, index);
 
               return (
