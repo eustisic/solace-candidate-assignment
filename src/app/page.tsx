@@ -7,6 +7,15 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    total: 0,
+    totalPages: 0,
+    hasNextPage: false,
+    hasPreviousPage: false,
+  });
 
   const toggleRow = (index: number) => {
     setExpandedRows((prev) => {
@@ -40,15 +49,19 @@ export default function Home() {
     return { displayText, shouldTruncate, isExpanded };
   };
 
-  const fetchAdvocates = async (search: string = "") => {
+  const fetchAdvocates = async (search: string = "", currentPage: number = 1) => {
     setIsLoading(true);
     try {
-      const url = search
-        ? `/api/advocates?search=${encodeURIComponent(search)}`
-        : "/api/advocates";
+      const params = new URLSearchParams();
+      if (search) params.append("search", search);
+      params.append("page", currentPage.toString());
+      params.append("limit", "10");
+
+      const url = `/api/advocates?${params.toString()}`;
       const response = await fetch(url);
       const jsonResponse = await response.json();
       setAdvocates(jsonResponse.data);
+      setPagination(jsonResponse.pagination);
     } catch (error) {
       console.error("Error fetching advocates:", error);
     } finally {
@@ -57,12 +70,17 @@ export default function Home() {
   };
 
   useEffect(() => {
+    // Reset to page 1 when search term changes
+    setPage(1);
+  }, [searchTerm]);
+
+  useEffect(() => {
     const debounceTimer = setTimeout(() => {
-      fetchAdvocates(searchTerm);
+      fetchAdvocates(searchTerm, page);
     }, 300);
 
     return () => clearTimeout(debounceTimer);
-  }, [searchTerm]);
+  }, [searchTerm, page]);
 
   const onChange = (event: any) => {
     setSearchTerm(event.target.value);
@@ -70,6 +88,18 @@ export default function Home() {
 
   const onClick = () => {
     setSearchTerm("");
+  };
+
+  const handlePreviousPage = () => {
+    if (pagination.hasPreviousPage) {
+      setPage((prev) => prev - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (pagination.hasNextPage) {
+      setPage((prev) => prev + 1);
+    }
   };
 
   return (
@@ -147,6 +177,45 @@ export default function Home() {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination Controls */}
+      {pagination.total > 0 && (
+        <div className="mt-6 flex items-center justify-between">
+          <div className="text-sm text-gray-700">
+            Showing{" "}
+            <span className="font-medium">
+              {(pagination.page - 1) * pagination.limit + 1}
+            </span>{" "}
+            to{" "}
+            <span className="font-medium">
+              {Math.min(pagination.page * pagination.limit, pagination.total)}
+            </span>{" "}
+            of <span className="font-medium">{pagination.total}</span> results
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={handlePreviousPage}
+              disabled={!pagination.hasPreviousPage}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors"
+            >
+              Previous
+            </button>
+
+            <div className="flex items-center px-4 py-2 text-sm font-medium text-gray-700">
+              Page {pagination.page} of {pagination.totalPages}
+            </div>
+
+            <button
+              onClick={handleNextPage}
+              disabled={!pagination.hasNextPage}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
